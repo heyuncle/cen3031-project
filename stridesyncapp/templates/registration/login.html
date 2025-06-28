@@ -1,0 +1,10 @@
+<h2>Please login</h2>
+
+<form class="login" method="post">
+    <a href="{% url 'signup' %}">Sign Up</a>
+
+    {% csrf_token %}
+    {{ form.as_p }}
+    
+    <input type="submit" value="Login"/>
+</form>

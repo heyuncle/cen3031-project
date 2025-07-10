@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h2>Manual Step Entry</h2>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Add Steps</button>
+  </form>
+  {% if form.errors %}
+    <div style="color: red;">
+      {{ form.errors }}
+    </div>
+  {% endif %}
+{% endblock %}

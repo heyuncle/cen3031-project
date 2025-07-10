@@ -25,6 +25,8 @@ SECRET_KEY = 'django-insecure-9_(otw)8cbn_k8=mak2)vkfjy9(wfc(hf2u9j9^lw^(*v7ie6!
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+
+
 ALLOWED_HOSTS = []
 
 
@@ -39,6 +41,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'stridesyncapp',  # Custom app for StrideSync
 ]
+
+AUTH_USER_MODEL = 'stridesyncapp.User'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -125,3 +129,5 @@ LOGOUT_REDIRECT_URL = 'home'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+AUTH_USER_MODEL = 'stridesyncapp.User'

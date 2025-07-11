@@ -1,0 +1,63 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+
+    <head>
+        <title>StrideSync</title>
+        <style>
+            a {
+                text-decoration: none;
+                color: inherit;
+                padding: 10px;
+            }
+            header {
+                background-color: #f5f5dc;
+                color: #2a942e;
+                padding: 10px 20px;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+            }
+            ul {
+                list-style: none;
+                display: flex;
+                gap: 20px;
+                padding: 0;
+                margin: 0;
+                font-weight: bold;
+            }
+        </style>
+    </head>
+
+    <body>
+        <header>
+            
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <h2><a href="{% url 'home' %}">Welcome to StrideSync, {{ request.user.username }}!</a></h2>
+            </div>
+
+            <div style="display: flex; align-items: center;">
+                <nav>
+                    <ul>
+                        <li>PROFILE</li>
+                        <li><a href="{% url 'steps' %}">STEPS</a></li>
+                        <li>LEADERBOARDS</li>
+                        <li><a href="{% url 'logout' %}">LOGOUT</a></li>
+                    </ul>
+                </nav>
+            </div>
+
+        </header>
+
+        <main>
+            {% block content %}
+            <!-- Content here -->
+            {% endblock %}
+        </main>
+
+        <footer>
+            <p>&copy; 2025 StrideSync. All rights reserved.</p>
+        </footer>
+    </body>
+
+</html>

@@ -29,8 +29,13 @@ def manual_step_entry(request):
             step_record = form.save(commit=False)
             step_record.user = request.user
             step_record.is_auto_synced = False  # Manual entry
+
             step_record.save()
-            return redirect('manual_step_entry')  # You can change this to another URL if you want
+            return redirect('steps')    # Redirect to steps page after saving
     else:
         form = ManualStepEntryForm()
     return render(request, "stridesyncapp/manual_step_entry.html", {"form": form})
+
+def steps(request):
+    step_records = StepRecord.objects.filter(user=request.user)
+    return render(request, 'stridesyncapp/steps.html', {'steps': step_records})

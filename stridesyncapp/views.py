@@ -39,7 +39,7 @@ def logout_view(request):
 
 
 @login_required
-def fitbit_connect():
+def fitbit_connect(request):
     params = {
         'response_type': 'code',
         'client_id': settings.FITBIT_CLIENT_ID,

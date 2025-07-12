@@ -1,0 +1,14 @@
+{% extends 'stridesyncapp/base.html' %}
+
+{% block title %}Edit Step Entry{% endblock %}
+
+{% block content %}
+  <h1>Edit Manual Step Entry</h1>
+
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn-submit">Update</button>
+    <a href="{% url 'manual_step_entry' %}" class=" btn btn-update">Cancel</a>
+  </form>
+{% endblock %}

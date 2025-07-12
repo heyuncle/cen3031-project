@@ -1,15 +1,47 @@
 {% extends 'stridesyncapp/base.html' %}
 
+{% block title %}Manual Entries{% endblock %}
+
 {% block content %}
-  <h2>Manual Step Entry</h2>
-  <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Add Steps</button>
-  </form>
-  {% if form.errors %}
-    <div style="color: red;">
-      {{ form.errors }}
-    </div>
-  {% endif %}
+
+
+<h1>Manual Step Entries</h1>
+
+<table style="width:100%; border-spacing:20px; text-align:left; border-collapse:separate;">
+    <thead>
+    <tr>
+        <th>Timestamp</th>
+        <th>Steps</th>
+        <th>Edit</th>
+        <th>Delete</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% for entry in manual_steps %}
+        <tr>
+        <td>{{ entry.timestamp|date:"Y-m-d H:i" }}</td>
+        <td>{{ entry.step_count }}</td>
+        <td>
+            <a href="{% url 'manual_step_edit' entry.pk %}" class="btn btn-edit">Edit</a>
+        </td>
+        <td>
+            <a href="{% url 'manual_step_delete' entry.pk %}"  class="btn btn-delete">Delete</a>
+        </td>
+        </tr>
+    {% empty %}
+        <tr>
+        <td>No manual entries yet.</td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<h2>
+    {% if is_edit %}Edit Entry{% else %}Add New Entry{% endif %}
+</h2>
+<form method="post">
+{% csrf_token %}
+{{ form.as_p }}
+<button type="submit" class="btn-submit">Add</button>
+</form>
 {% endblock %}

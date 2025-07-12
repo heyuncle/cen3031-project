@@ -12,7 +12,7 @@
             }
             header {
                 background-color: #f5f5dc;
-                color: #2a942e;
+                color: #28a745;
                 padding: 10px 20px;
                 display: flex;
                 align-items: center;
@@ -26,12 +26,52 @@
                 margin: 0;
                 font-weight: bold;
             }
+            .btn {
+                display: inline-block;
+                padding: 10px 20px;
+                border-radius: 10px;
+                font-weight: bold;
+                text-decoration: none;
+                text-align: center;
+                color: white;
+            }
+            .btn-edit {
+                background-color: #007bff;
+            }
+            .btn-edit:hover {
+                background-color: #0056b3;
+            }
+            .btn-delete {
+                background-color: #dc3545;
+            }
+            .btn-delete:hover {
+                background-color: #a71d2a;
+            }
+            .btn-add {
+                background-color: #28a745;
+            }
+            .btn-add:hover{
+                background-color: #218838;
+            }
+            .btn-submit {
+                background-color: #28a745;
+                color: white;
+                padding: 11px 21px;
+                border: none;
+                border-radius: 10px;
+                font-weight: bold;
+            }
+            .btn-submit:hover {
+                background-color: #218838;
+            }
+            .btn-update {
+                background-color: #6c757d;
+            }
         </style>
     </head>
 
     <body>
         <header>
-            
             <div style="display: flex; align-items: center; gap: 20px;">
                 <h2><a href="{% url 'home' %}">Welcome to StrideSync, {{ request.user.username }}!</a></h2>
             </div>

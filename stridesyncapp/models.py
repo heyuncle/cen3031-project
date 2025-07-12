@@ -2,6 +2,7 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from django.utils import timezone
 from datetime import datetime, time
+from django.conf import settings
 
 # Use a function for default time (Django can't serialize .time directly)
 def default_reminder_time():
@@ -13,6 +14,16 @@ class User(AbstractUser):
     step_goal = models.PositiveIntegerField(default=10000)
     date_joined = models.DateTimeField(default=timezone.now)
     last_login = models.DateTimeField(null=True, blank=True)
+
+# Fitbit Token model
+class FitbitToken(models.Model):
+    user = models.OneToOneField(settings.AUTH_USER_MODEL,on_delete=models.CASCADE)
+    access_token = models.CharField(max_length=255)
+    refresh_token = models.CharField(max_length=255)
+    expires_at = models.DateTimeField()
+
+    def __str__(self):
+        return f"FitbitToken({self.user.username})"
 
 class StepRecord(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='steps')

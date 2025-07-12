@@ -131,3 +131,9 @@ LOGOUT_REDIRECT_URL = 'home'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'stridesyncapp.User'
+
+# project/settings.py
+
+FITBIT_CLIENT_ID = '23QFQZ'
+FITBIT_CLIENT_SECRET = '5930bce0aa6e86b288d7c9a65a91096b'
+FITBIT_REDIRECT_URI = 'http://localhost:8000/fitbit/callback/'

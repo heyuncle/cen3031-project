@@ -6,7 +6,7 @@
 
 {% block content %}
     <h1>Step History</h1>
-    <table style="width: 50%; border-collapse: separate; border-spacing: 20px; text-align: left;">
+    <table style="width: 100%; border-collapse: separate; border-spacing: 20px; text-align: left;">
         <thead>
             <tr>
                 <th>Date</th>
@@ -17,7 +17,7 @@
         <tbody>
             {% for record in steps %}
             <tr>
-                <td>{{ record.timestamp|date:"M d, Y" }}</td>
+                <td>{{ record.day|date:"Y-M-d" }}</td>
                 <td>{{ record.step_count }}</td>
                 <td>{{ record.is_auto_synced|yesno:"Yes,No" }}</td>
             </tr>

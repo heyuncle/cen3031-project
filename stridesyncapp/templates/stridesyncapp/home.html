@@ -6,7 +6,7 @@
 
 {% block content %}
     <h1>Dashboard</h1>
-    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 20px 0; ">
+    <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin: 20px 0;">
         <div style="padding: 20px; border: 2px solid #2a942e; border-radius: 10px; text-align: center;">
             <h2>Today's Steps</h2>
             <p style="font-size: 2em; margin: 0;">{{ steps_today|default:"0" }}</p>
@@ -18,10 +18,12 @@
         </div>
     </div>
 
-    {% if not request.user.fitbittoken %}
-    <a href="{% url 'fitbit_connect' %}" style="padding: 20px; background-color: #2a942e; color: white;">CONNECT FITBIT</a>
-    {% else %}
-    <h2 style="background-color: #2a942e; color: white; padding: 0.25em 0.75em; border-radius: 0.25em; text-align: center;">Fitbit Connected</h2>
-    {% endif %}
+    <div style="text-align: center; background-color: #2a942e; color: white; border-radius: 20px; margin: 20px 0;">
+        {% if not request.user.fitbittoken %}
+        <a href="{% url 'fitbit_connect' %}">CONNECT FITBIT</a>
+        {% else %}
+        <h2>Fitbit Connected</h2>
+        {% endif %}
+    </div>
 
 {% endblock %}

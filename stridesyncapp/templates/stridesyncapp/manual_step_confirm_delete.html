@@ -1,0 +1,15 @@
+{% extends 'stridesyncapp/base.html' %}
+
+{% block title %}Confirm Delete{% endblock %}
+
+{% block content %}
+<h1>Confirm Delete</h1>
+<p>
+    Are you sure you want to delete the entry?
+</p>
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-delete">DELETE</button>
+    <a href="{% url 'manual_step_entry' %}" class=" btn btn-update">Cancel</a>
+</form>
+{% endblock %}

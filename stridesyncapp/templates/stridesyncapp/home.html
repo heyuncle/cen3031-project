@@ -18,9 +18,9 @@
         </div>
     </div>
 
-    <div style="text-align: center; background-color: #2a942e; color: white; border-radius: 20px; margin: 20px 0;">
+    <div">
         {% if not request.user.fitbittoken %}
-        <a href="{% url 'fitbit_connect' %}">CONNECT FITBIT</a>
+        <a href="{% url 'fitbit_connect' %}" class="btn btn-edit">CONNECT FITBIT</a>
         {% else %}
         <h2>Fitbit Connected</h2>
         {% endif %}

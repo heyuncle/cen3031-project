@@ -67,6 +67,104 @@
             .btn-update {
                 background-color: #6c757d;
             }
+            .group-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 20px;
+                margin-top: 20px;
+            }
+            .group-card {
+                background: #fff;
+                border: 1px solid #ddd;
+                border-radius: 10px;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+                padding: 20px;
+                text-align: center;
+            }
+            .group-card {
+                max-width: 800px;
+                margin: 30px auto;
+                padding: 20px;
+                border: 1px solid #ddd;
+                border-radius: 10px;
+                box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            }
+            .group-header h1 {
+                margin: 0;
+                font-size: 2.5em;
+                color: #2a942e;
+                text-align: center;
+            }
+            .group-header p {
+                color: #666;
+                text-align: center;
+                margin: 5px 0 20px;
+            }
+            .members-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+                gap: 15px;
+                margin-bottom: 30px;
+            }
+            .member-card {
+                padding: 12px;
+                background: #fafafa;
+                border: 1px solid #eee;
+                border-radius: 8px;
+                text-align: center;
+            }
+            .member-card .username {
+                font-weight: bold;
+                color: #333;
+            }
+            .member-card .joined-date {
+                font-size: 0.9em;
+                color: #777;
+                margin-top: 4px;
+            }
+            .actions-footer {
+                text-align: center;
+                margin-top: 20px;
+            }
+            .step-history-container {
+                max-width: 700px;
+                margin: 40px auto;
+                padding: 0 20px;
+            }
+            .history-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                margin-bottom: 20px;
+            }
+            .history-header h1 {
+                margin: 0;
+                color: #2a942e;
+            }
+            .step-table {
+                width: 100%;
+                border-collapse: collapse;
+            }
+            .step-table thead th {
+                background: #28a745;
+                color: white;
+                padding: 12px;
+                text-align: left;
+            }
+            .step-table tbody tr:nth-child(odd) {
+                background: #f9f9f9;
+            }
+            .step-table tbody td {
+                padding: 12px;
+                border-bottom: 1px solid #eee;
+            }
+            .no-records {
+                text-align: center;
+                color: #777;
+                padding: 20px 0;
+            }
+            
+
         </style>
     </head>
 
@@ -81,6 +179,7 @@
                     <ul>
                         <li><a href="{% url 'profile' %}">PROFILE</a></li>
                         <li><a href="{% url 'steps' %}">STEPS</a></li>
+                        <li><a href="{% url 'group_list' %}">GROUPS</a></li>
                         <li><a href="{% url 'leaderboards' %}">LEADERBOARDS</a></li>
                         <li><a href="{% url 'logout' %}">LOGOUT</a></li>
                     </ul>

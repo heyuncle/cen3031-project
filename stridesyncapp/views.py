@@ -1,22 +1,21 @@
-from urllib.error import HTTPError
-from django.contrib.auth import logout
-from django.contrib.auth.decorators import login_required
-from django.contrib.auth.mixins import LoginRequiredMixin
-from .forms import SignUpForm, ManualStepEntryForm
-from django.shortcuts import render, redirect
-from django.urls import reverse_lazy
-from django.views.generic import CreateView
-from .models import StepRecord
-import urllib.parse
-import urllib.request
+from .forms import SignUpForm, ManualStepEntryForm, GroupForm
+from .models import StepRecord, FitbitToken, Group, GroupMembership
+from .utils import get_fitbit_steps
 from datetime import date, timedelta
 from django.conf import settings
-from django.shortcuts import redirect, render
-from django.utils import timezone
-from .models import FitbitToken
-from .utils import get_fitbit_steps
+from django.contrib.auth import logout
+from django.contrib.auth.decorators import login_required
+from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.db.models.functions import TruncDate
 from django.db.models import Sum, Max
+from django.shortcuts import render, redirect, get_object_or_404
+from django.urls import reverse_lazy
+from django.views.generic import CreateView, ListView, DetailView, UpdateView, DeleteView
+from django.shortcuts import redirect, render
+from django.utils import timezone
+from urllib.error import HTTPError
+import urllib.parse
+import urllib.request
 import json, base64
 
 
@@ -161,3 +160,62 @@ def profile(request):
 @login_required
 def leaderboards(request):
     return render(request, "stridesyncapp/leaderboards.html")
+
+class GroupListView(LoginRequiredMixin, ListView):
+    model = Group
+    template_name = 'stridesyncapp/group_list.html'
+    context_object_name = 'groups'
+
+class GroupCreateView(LoginRequiredMixin, CreateView):
+    model = Group
+    form_class = GroupForm
+    template_name = 'stridesyncapp/group_form.html'
+    success_url = reverse_lazy('group_list')
+
+    def form_valid(self, form):
+        form.instance.created_by = self.request.user
+        return super().form_valid(form)
+    
+class GroupDetailView(LoginRequiredMixin, DetailView):
+    model = Group
+    template_name = 'stridesyncapp/group_detail.html'
+    context_object_name = 'group'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        group = self.get_object()
+        context['is_member'] = group.members.filter(user=self.request.user).exists()
+        return context
+
+class GroupUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Group
+    form_class = GroupForm
+    template_name = 'stridesyncapp/group_form.html'
+    success_url = reverse_lazy('group_list')
+
+    def test_func(self):
+        group = self.get_object()
+        return group.created_by == self.request.user or self.request.user.is_admin
+
+class GroupDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Group
+    template_name = 'stridesyncapp/group_confirm_delete.html'
+    success_url = reverse_lazy('group_list')
+
+    def test_func(self):
+        group = self.get_object()
+        return group.created_by == self.request.user or self.request.user.is_admin
+    
+@login_required
+def group_join(request, pk):
+    group = get_object_or_404(Group, pk=pk)    
+    GroupMembership.objects.get_or_create(user=request.user, group=group)
+
+    return redirect('group_detail', pk=pk)
+
+@login_required
+def group_leave(request, pk):
+    group = get_object_or_404(Group, pk=pk)
+    
+    GroupMembership.objects.filter(user=request.user, group=group).delete()
+    return redirect('group_list')

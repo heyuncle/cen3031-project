@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from django.contrib.auth import get_user_model
-from .models import StepRecord
+from .models import StepRecord, Group
 
 class SignUpForm(UserCreationForm):
     first_name = forms.CharField(max_length=30, required=True)
@@ -19,3 +19,8 @@ class ManualStepEntryForm(forms.ModelForm):
         widgets = {
             'timestamp': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
         }
+
+class GroupForm(forms.ModelForm):
+    class Meta:
+        model = Group
+        fields = ['name']

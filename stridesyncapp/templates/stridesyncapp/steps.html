@@ -1,32 +1,33 @@
 {% extends 'stridesyncapp/base.html' %}
 
-{% block title %}
-    Step History
-{% endblock %}
+{% block title %}Step History{% endblock %}
 
 {% block content %}
-    <h1>Step History</h1>
-    <table style="width: 50%; border-collapse: separate; border-spacing: 20px; text-align: left;">
-        <thead>
-            <tr>
-                <th>Date</th>
-                <th>Steps</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for record in steps %}
-            <tr>
-                <td>{{ record.day|date:"Y-M-d" }}</td>
-                <td>{{ record.step_count }}</td>
-            </tr>
-            {% empty %}
-            <tr>
-                <td colspan="2">No step records found.</td>
-            </tr>
-            {% endfor %}
-        </tbody>
-    </table>
+    <div class="step-history-container">
+        <div class="history-header">
+            <h1>Step History</h1>
+            <a href="{% url 'manual_step_entry' %}" class="btn btn-add">Add Manual Steps</a>
+        </div>
 
-    <a href="{% url 'manual_step_entry' %}" class="btn btn-add">Edit Manual Steps</a>
-
+        {% if steps %}
+            <table class="step-table">
+                <thead>
+                    <tr>
+                        <th>Date</th>
+                        <th>Steps</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in steps %}
+                        <tr>
+                            <td>{{ record.day|date:"M d, Y" }}</td>
+                            <td>{{ record.step_count}}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <div class="no-records">No step records found.</div>
+        {% endif %}
+    </div>
 {% endblock %}

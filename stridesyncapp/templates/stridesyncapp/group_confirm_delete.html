@@ -1,0 +1,16 @@
+{% extends 'stridesyncapp/base.html' %}
+
+{% block title %}Delete Group{% endblock %}
+
+{% block content %}
+    <h1>Delete Group</h1>
+    <p>Are you sure you want to delete "{{ group.name }}"?</p>
+
+    <form method="post">
+        {% csrf_token %}
+        
+        <button type="submit" class="btn btn-delete">Yes, Delete</button>
+
+        <a href="{% url 'group_detail' group.pk %}" class="btn btn-update">Cancel</a>
+    </form>
+{% endblock %}

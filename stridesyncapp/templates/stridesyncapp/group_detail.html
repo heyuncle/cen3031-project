@@ -1,0 +1,38 @@
+{% extends 'stridesyncapp/base.html' %}
+
+{% block title %}
+    {{ group.name }}
+{% endblock %}
+
+{% block content %}
+    <div class="group-card">
+        <div class="group-header">
+            <h1>{{ group.name }}</h1>
+            <p>Created by <strong>{{ group.created_by.username }}</strong>on {{ group.created_on|date:"M d, Y" }}</p>
+        </div>
+
+        <h2 style="color:#28a745; border-bottom:4px solid #eee; padding-bottom:4px;">Members ({{ group.members.count }})</h2>
+
+        {% if group.members.count %}
+            <div class="members-grid">
+                {% for m in group.members.all %}
+                <div class="member-card">
+                    <div class="username">{{ m.user.username }}</div>
+                    <div class="joined-date">Joined {{ m.joined_on|date:"M d, Y" }}</div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <p style="color:#777; font-style:italic;">No members yet. Be the first to join!</p>
+        {% endif %}
+
+        <div class="actions-footer">
+            {% if is_member %}
+                <a href="{% url 'group_leave' group.pk %}" class="btn btn-delete">Leave Group</a>
+            {% else %}
+                <a href="{% url 'group_join' group.pk %}" class="btn btn-add">Join Group</a>
+            {% endif %}
+                <a href="{% url 'group_list' %}" class="btn btn-update">Back to Groups</a>
+        </div>
+    </div>
+{% endblock %}

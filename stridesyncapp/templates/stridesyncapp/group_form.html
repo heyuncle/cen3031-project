@@ -1,0 +1,20 @@
+{% extends 'stridesyncapp/base.html' %}
+
+{% block title %}
+    {% if form.instance.pk %}Edit Group{% else %}Create Group{% endif %}
+{% endblock %}
+
+{% block content %}
+    <h1>{% if form.instance.pk %}Edit Group{% else %}Create New Group{% endif %}</h1>
+
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        <button type="submit" class="btn {% if form.instance.pk %}btn-update{% else %}btn-add{% endif %}">
+            {% if form.instance.pk %}Update Group{% else %}Create Group{% endif %}
+        </button>
+
+        <a href="{% url 'group_list' %}" class="btn btn-update">Cancel</a>
+    </form>
+{% endblock %}

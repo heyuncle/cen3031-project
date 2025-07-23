@@ -1,6 +1,7 @@
 from .forms import SignUpForm, ManualStepEntryForm, GroupForm
-from .models import StepRecord, FitbitToken, Group, GroupMembership
+from .models import StepRecord, FitbitToken, Group, GroupMembership, Badge
 from .utils import get_fitbit_steps
+from .badge_utils import check_and_award_badges
 from datetime import date, timedelta
 from django.conf import settings
 from django.contrib.auth import logout
@@ -19,6 +20,7 @@ import urllib.request
 import json, base64
 
 
+
 class SignUp(CreateView):
     form_class = SignUpForm
     template_name = "registration/signup.html"
@@ -31,10 +33,13 @@ def logout_view(request):
 
 @login_required
 def home(request):
+    # awarded_badges will be a list of dicts, or None
+    awarded_badges = request.session.pop('awarded_badges', None)
     context = {
         "name": request.user,
         "steps_today": request.user.steps.filter(timestamp__date=date.today()).aggregate(Sum('step_count'))['step_count__sum'],
         "steps_weekly": request.user.steps.filter(timestamp__date__gte=date.today() - timedelta(days=6)).aggregate(Sum('step_count'))['step_count__sum'],
+        "awarded_badges": awarded_badges,
     }
     return render(request, "stridesyncapp/home.html", context)
 
@@ -118,7 +123,13 @@ def manual_step_entry(request):
             step_record.user = request.user
             step_record.is_auto_synced = False
             step_record.save()
-            return redirect('manual_step_entry')
+            badges = check_and_award_badges(
+                user=request.user,
+                trigger_type="steps",
+                value=step_record.step_count,
+                request=request  # so session gets set
+)
+            return redirect('home')
     else:
         form = ManualStepEntryForm()
 

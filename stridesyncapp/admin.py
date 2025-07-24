@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
 from .models import (
-    User, StepRecord, Streak, Badge, UserBadge,
+    User, StepRecord, Streak, Points, Badge, UserBadge,
     Group, GroupMembership, LeaderboardEntry,
     GoalHistory, NotificationPreference
 )
@@ -14,6 +14,7 @@ class UserAdmin(BaseUserAdmin):
 admin.site.register(User, UserAdmin)
 admin.site.register(StepRecord)
 admin.site.register(Streak)
+admin.site.register(Points)
 admin.site.register(Badge)
 admin.site.register(UserBadge)
 admin.site.register(Group)

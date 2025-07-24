@@ -1,7 +1,8 @@
 from .forms import SignUpForm, ManualStepEntryForm, GroupForm
-from .models import StepRecord, FitbitToken, Group, GroupMembership, Badge
+from .models import StepRecord, FitbitToken, Group, GroupMembership, Badge, Streak, Points
 from .utils import get_fitbit_steps
 from .badge_utils import check_and_award_badges
+from .streak_points import update_streak, update_points
 from datetime import date, timedelta
 from django.conf import settings
 from django.contrib.auth import logout
@@ -35,10 +36,14 @@ def logout_view(request):
 def home(request):
     # awarded_badges will be a list of dicts, or None
     awarded_badges = request.session.pop('awarded_badges', None)
+    update_streak(request.user)
+    update_points(request.user)
     context = {
         "name": request.user,
         "steps_today": request.user.steps.filter(timestamp__date=date.today()).aggregate(Sum('step_count'))['step_count__sum'],
         "steps_weekly": request.user.steps.filter(timestamp__date__gte=date.today() - timedelta(days=6)).aggregate(Sum('step_count'))['step_count__sum'],
+        "streak": request.user.streak.current_streak if hasattr(request.user, 'streak') else 0,
+        "user_points": request.user.points.current_points if hasattr(request.user, 'points') else 0,
         "awarded_badges": awarded_badges,
     }
     return render(request, "stridesyncapp/home.html", context)
@@ -110,6 +115,15 @@ def steps(request):
              .annotate(step_count=Sum('step_count'),
                        is_auto_synced=Max('is_auto_synced')).order_by('-day'))
 
+    # Can remove once user creation automatically creates streak and points
+    if not hasattr(request.user, 'streak'):
+                Streak.objects.create(user = request.user, last_logged_date=date.today())
+    if not hasattr(request.user, 'points'):
+                Points.objects.create(user = request.user)
+    # Recalculate streak and points
+    update_streak(request.user)
+    update_points(request.user)
+
     return render(request, 'stridesyncapp/steps.html', {'steps': steps})
 
 @login_required
@@ -123,12 +137,24 @@ def manual_step_entry(request):
             step_record.user = request.user
             step_record.is_auto_synced = False
             step_record.save()
+
+            # Can remove once user creation automatically creates streak and points
+            if not hasattr(request.user, 'streak'):
+                        Streak.objects.create(user = request.user, last_logged_date=date.today())
+            if not hasattr(request.user, 'points'):
+                        Points.objects.create(user = request.user)
+            # Recalculate streak and points
+            update_streak(request.user)
+            update_points(request.user)
+
+            # Check and award badges after manual step entry
             badges = check_and_award_badges(
                 user=request.user,
                 trigger_type="steps",
                 value=step_record.step_count,
                 request=request  # so session gets set
-)
+            )
+
             return redirect('home')
     else:
         form = ManualStepEntryForm()
@@ -147,6 +173,9 @@ def manual_step_edit(request, pk):
     else:
         form = ManualStepEntryForm(instance=step_record)
 
+    update_streak(request.user)
+    update_points(request.user)
+
     return render(request, "stridesyncapp/manual_step_edit.html", {
         "form": form,
         'manual_steps': StepRecord.objects.filter(user=request.user, is_auto_synced=False).order_by('-timestamp'),
@@ -159,6 +188,9 @@ def manual_step_delete(request, pk):
     if request.method == 'POST':
         step_record.delete()
         return redirect('manual_step_entry')
+    
+    update_streak(request.user)
+    update_points(request.user)
 
     return render(request, "stridesyncapp/manual_step_confirm_delete.html", {
         'step_record': step_record,

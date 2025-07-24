@@ -16,6 +16,15 @@
             <h2>This Week</h2>
             <p style="font-size: 2em; margin: 0;">{{ steps_weekly|default:"0" }}</p>
         </div>
+
+        <div style="padding: 20px; border: 2px solid #dc5926; border-radius: 10px; text-align: center;">
+            <h2>Current Streak</h2>
+            <p style="font-size: 2em; margin: 0;">{{ streak|default:"0" }}</p>
+        </div>
+            <div style="padding: 20px; border: 2px solid #dc5926; border-radius: 10px; text-align: center;">
+            <h2>Current Points</h2>
+            <p style="font-size: 2em; margin: 0;">{{ user_points|default:"0" }}</p>
+        </div>
     </div>
 
     <div>

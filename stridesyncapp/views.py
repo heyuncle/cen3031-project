@@ -1,4 +1,4 @@
-from .forms import SignUpForm, ManualStepEntryForm, GroupForm
+from .forms import SignUpForm, ManualStepEntryForm, GroupForm, StepGoalForm
 from .models import StepRecord, FitbitToken, Group, GroupMembership, Badge, Streak, Points
 from .utils import get_fitbit_steps
 from .badge_utils import check_and_award_badges
@@ -36,15 +36,72 @@ def logout_view(request):
 def home(request):
     # awarded_badges will be a list of dicts, or None
     awarded_badges = request.session.pop('awarded_badges', None)
+
+    streak, created = Streak.objects.get_or_create(user=request.user)
     update_streak(request.user)
     update_points(request.user)
+    
+    # Today’s & this week’s raw totals
+    steps_today = request.user.steps \
+        .filter(timestamp__date=date.today()) \
+        .aggregate(Sum('step_count'))['step_count__sum'] or 0
+
+    steps_weekly = request.user.steps \
+        .filter(timestamp__date__gte=date.today() - timedelta(days=6)) \
+        .aggregate(Sum('step_count'))['step_count__sum'] or 0
+
+    # 7-day bar chart data
+    start_week = date.today() - timedelta(days=6)
+    weekly_qs = (
+        request.user.steps
+        .filter(timestamp__date__gte=start_week)
+        .annotate(day=TruncDate('timestamp'))
+        .values('day')
+        .annotate(total=Sum('step_count'))
+        .order_by('day')
+    )
+    week_days = [start_week + timedelta(days=i) for i in range(7)]
+
+    weekly_data_map = {
+        entry['day']: entry['total']
+        for entry in weekly_qs
+    }
+
+    labels_weekly = [d.strftime('%b %d') for d in week_days]
+    data_weekly   = [weekly_data_map.get(d, 0) for d in week_days]
+
+    # 30-day line chart data
+    start_month = date.today() - timedelta(days=29)
+    monthly_qs = (
+        request.user.steps
+        .filter(timestamp__date__gte=start_month)
+        .annotate(day=TruncDate('timestamp'))
+        .values('day')
+        .annotate(total=Sum('step_count'))
+        .order_by('day')
+    )
+    month_days = [start_month + timedelta(days=i) for i in range(30)]
+    monthly_data_map = {e['day']: e['total'] for e in monthly_qs}
+
+    labels_monthly = [d.strftime('%b %d') for d in month_days]
+    data_monthly   = [monthly_data_map.get(d, 0) for d in month_days]
+
+    # Progress toward today’s goal
+    percent_goal = int((steps_today / request.user.step_goal) * 100)
+
     context = {
-        "name": request.user,
-        "steps_today": request.user.steps.filter(timestamp__date=date.today()).aggregate(Sum('step_count'))['step_count__sum'],
-        "steps_weekly": request.user.steps.filter(timestamp__date__gte=date.today() - timedelta(days=6)).aggregate(Sum('step_count'))['step_count__sum'],
-        "streak": request.user.streak.current_streak if hasattr(request.user, 'streak') else 0,
+        # your existing context...
+        "steps_today": steps_today,
+        "steps_weekly": steps_weekly,
+        'streak': request.user.streak.current_streak,
         "user_points": request.user.points.current_points if hasattr(request.user, 'points') else 0,
-        "awarded_badges": awarded_badges,
+
+        # new chart & progress data, JSON-encoded for template
+        "labels_weekly": json.dumps(labels_weekly),
+        "data_weekly": json.dumps(data_weekly),
+        "labels_monthly": json.dumps(labels_monthly),
+        "data_monthly": json.dumps(data_monthly),
+        "percent_goal": percent_goal,
     }
     return render(request, "stridesyncapp/home.html", context)
 
@@ -262,3 +319,20 @@ def group_leave(request, pk):
     
     GroupMembership.objects.filter(user=request.user, group=group).delete()
     return redirect('group_list')
+
+@login_required
+def edit_step_goal(request):
+    """
+    Let the logged-in user update their daily step_goal.
+    """
+    if request.method == 'POST':
+        form = StepGoalForm(request.POST, instance=request.user)
+        if form.is_valid():
+            form.save()
+            return redirect('home')
+    else:
+        form = StepGoalForm(instance=request.user)
+
+    return render(request, 'stridesyncapp/edit_step_goal.html', {
+        'form': form
+    })

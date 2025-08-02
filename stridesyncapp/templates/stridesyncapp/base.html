@@ -163,9 +163,29 @@
                 color: #777;
                 padding: 20px 0;
             }
-            
+            .progress-container {
+                width: 100%;          /* adapt to parent or set a max-width */
+                max-width: 400px;
+                height: 24px;
+                background: #e0e0e0;  /* track color */
+                border-radius: 12px;
+                overflow: hidden;
+            }
+
+            .progress-bar {
+                height: 100%;
+                background: #28a745;  /* fill color */
+                color: #fff;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-weight: bold;
+                transition: width 0.4s ease;
+            }
 
         </style>
+
+        <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     </head>
 
     <body>

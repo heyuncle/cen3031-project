@@ -1,0 +1,17 @@
+{% extends 'stridesyncapp/base.html' %}
+
+{% block title %}Edit Step Goal{% endblock %}
+
+{% block content %}
+  <div style="max-width:400px; margin:2em auto; padding:1em; border:1px solid #ddd; border-radius:8px;">
+    <h1 style="text-align:center; color:#2a942e;">Edit Daily Step Goal</h1>
+    <form method="post">
+      {% csrf_token %}
+      {{ form.as_p }}
+      <div style="display:flex; justify-content:space-between; margin-top:1em;">
+        <button type="submit" class="btn btn-submit">Save</button>
+        <a href="{% url 'home' %}" class="btn btn-delete">Cancel</a>
+      </div>
+    </form>
+  </div>
+{% endblock %}

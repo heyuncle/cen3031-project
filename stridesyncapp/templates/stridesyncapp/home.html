@@ -1,8 +1,6 @@
 {% extends 'stridesyncapp/base.html' %}
 
-{% block title %}
-  Dashboard
-{% endblock %}
+{% block title %}Dashboard{% endblock %}
 
 {% block content %}
     <h1>Dashboard</h1>
@@ -27,6 +25,23 @@
         </div>
     </div>
 
+    <!-- Progress Bar Toward Today’s Goal -->
+    <h2 style="display:flex; justify-content:space-between; align-items:center;">
+    Goal Progress
+    <a href="{% url 'edit_step_goal' %}" class="btn btn-update" style="font-size:0.9em; padding:0.4em 1em;">
+        Edit Goal
+    </a>
+    </h2>
+    <canvas id="goalBarChart" width="400" height="80"></canvas>
+
+    <!-- Weekly Bar Chart -->
+    <h2>Last 7 Days</h2>
+    <canvas id="weeklyChart" width="400" height="200"></canvas>
+
+    <!-- Monthly Line Chart -->
+    <h2>Last 30 Days</h2>
+    <canvas id="monthlyChart" width="400" height="200"></canvas>
+
     <div>
         {% if not request.user.fitbittoken %}
         <a href="{% url 'fitbit_connect' %}" class="btn btn-edit">CONNECT FITBIT</a>
@@ -35,24 +50,102 @@
         {% endif %}
     </div>
 
-{% if awarded_badges %}
-  <div id="badgeModal" style="position: fixed; z-index: 1000; left: 0; top: 0; width: 100vw; height: 100vh; background:rgba(0,0,0,0.55); display:flex; justify-content:center; align-items:center;">
-    <div style="background:white; padding:2em 2.5em; border-radius:18px; box-shadow: 0 0 20px #2a942e44; max-width:370px;">
-      <h2 style="text-align:center;">🎉 Achievement Unlocked!</h2>
-      <ul style="list-style:none;padding:0;">
-        {% for badge in awarded_badges %}
-          <li style="margin-bottom:14px;text-align:center;">
-            <img src="https://cdn4.iconfinder.com/data/icons/game-ui-set-3/96/Medal_gold-512.png" alt="Badge" style="height:48px;margin-right:10px;vertical-align:middle;"> 
-            <strong>{{ badge.name }}</strong><br>
-            <span style="font-size:0.95em;">{{ badge.description }}</span>
-          </li>
-        {% endfor %}
-      </ul>
-      <div style="text-align:center;">
-        <button onclick="document.getElementById('badgeModal').style.display='none'" style="padding:0.4em 1.6em; border:none; background:#2a942e; color:white; border-radius:9px; font-size:1em; cursor:pointer;">Close</button>
-      </div>
+    {% if awarded_badges %}
+    <div id="badgeModal" style="position: fixed; z-index: 1000; left: 0; top: 0; width: 100vw; height: 100vh; background:rgba(0,0,0,0.55); display:flex; justify-content:center; align-items:center;">
+        <div style="background:white; padding:2em 2.5em; border-radius:18px; box-shadow: 0 0 20px #2a942e44; max-width:370px;">
+        <h2 style="text-align:center;">🎉 Achievement Unlocked!</h2>
+        <ul style="list-style:none;padding:0;">
+            {% for badge in awarded_badges %}
+            <li style="margin-bottom:14px;text-align:center;">
+                <img src="https://cdn4.iconfinder.com/data/icons/game-ui-set-3/96/Medal_gold-512.png" alt="Badge" style="height:48px;margin-right:10px;vertical-align:middle;"> 
+                <strong>{{ badge.name }}</strong><br>
+                <span style="font-size:0.95em;">{{ badge.description }}</span>
+            </li>
+            {% endfor %}
+        </ul>
+        <div style="text-align:center;">
+            <button onclick="document.getElementById('badgeModal').style.display='none'" style="padding:0.4em 1.6em; border:none; background:#2a942e; color:white; border-radius:9px; font-size:1em; cursor:pointer;">Close</button>
+        </div>
+        </div>
     </div>
-  </div>
-{% endif %}
+    {% endif %}
+
+    <!-- Chart.js init script -->
+    <script>
+        const percent = {{ percent_goal|default:0 }};
+        const goalCtx = document
+            .getElementById('goalBarChart')
+            .getContext('2d');
+
+        new Chart(goalCtx, {
+            type: 'bar',
+            data: {
+                labels: ['Today'],
+                datasets: [{
+                    data: [percent],
+                    backgroundColor: '#28a745',
+                    borderRadius: 10,
+                    barThickness: 40
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                scales: {
+                    x: {
+                    beginAtZero: true,
+                    max: 100,
+                    display: true
+                    },
+                    y: { display: false }
+                },
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: ctx => `${ctx.raw}% of goal`
+                        }
+                    }
+                }
+            }
+        });
+
+        // Parse JSON-encoded data into JS arrays
+        const labelsWeekly  = JSON.parse('{{ labels_weekly|escapejs }}');
+        const dataWeekly    = JSON.parse('{{ data_weekly  |escapejs }}');
+        const labelsMonthly = JSON.parse('{{ labels_monthly|escapejs }}');
+        const dataMonthly   = JSON.parse('{{ data_monthly  |escapejs }}');
+
+        // 1) Bar chart for 7-day steps
+        const weeklyCtx = document.getElementById('weeklyChart').getContext('2d');
+        new Chart(weeklyCtx, {
+        type: 'bar',
+        data: {
+            labels: labelsWeekly,
+            datasets: [{
+                label: 'Steps',
+                data: dataWeekly,
+                backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                hoverBackgroundColor: 'rgba(54,162,235,0.8)'
+
+            }]
+        },
+        options: { scales: { y: { beginAtZero: true } } }
+        });
+
+        const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
+        new Chart(monthlyCtx, {
+        type: 'line',
+        data: {
+            labels: labelsMonthly,
+            datasets: [{
+                label: 'Steps',
+                data: dataMonthly,
+                borderColor: 'rgba(75, 192, 192, 1)',
+                fill: false,
+            }]
+        },
+        options: { scales: { y: { beginAtZero: true } } }
+        });
+    </script>
 
 {% endblock %}

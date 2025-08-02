@@ -46,6 +46,7 @@ class Streak(models.Model):
 class Points(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='points')
     current_points = models.PositiveIntegerField(default=0)
+    total_points   = models.PositiveIntegerField(default=0)
 
 class Badge(models.Model):
     name = models.CharField(max_length=50)

@@ -28,5 +28,4 @@ urlpatterns = [
     path('groups/<int:pk>/leave/', views.group_leave, name='group_leave'),
 
     path('settings/step-goal/', views.edit_step_goal, name='edit_step_goal'),
-
 ]

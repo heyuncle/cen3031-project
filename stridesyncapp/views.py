@@ -1,6 +1,12 @@
 from .forms import SignUpForm, ManualStepEntryForm, GroupForm, StepGoalForm
 from .models import StepRecord, FitbitToken, Group, GroupMembership, Badge, Streak, Points
-from .utils import get_fitbit_steps, get_global_leaderboard, get_group_leaderboard
+from .utils import (
+    get_fitbit_steps,
+    get_global_leaderboard,
+    get_group_leaderboard,
+    get_weekly_step_totals,
+    get_monthly_step_totals,
+)
 from .badge_utils import check_and_award_badges
 from .streak_points import update_streak, update_points
 from datetime import date, timedelta
@@ -19,7 +25,6 @@ from urllib.error import HTTPError
 import urllib.parse
 import urllib.request
 import json, base64
-
 
 
 class SignUp(CreateView):
@@ -256,8 +261,6 @@ def profile(request):
 
 @login_required
 def leaderboards(request):
-    from .utils import get_global_leaderboard, get_group_leaderboard
-
     global_top = get_global_leaderboard(limit=10)
 
     first_membership = request.user.group_memberships.select_related('group').first()
@@ -376,3 +379,23 @@ def edit_step_goal(request):
     return render(request, 'stridesyncapp/edit_step_goal.html', {
         'form': form
     })
+
+
+# Trend analysis API views (Task 16)
+
+@login_required
+def weekly_trend_view(request):
+    data = get_weekly_step_totals(request.user)
+    return JsonResponse([
+        {"date": entry["week"], "total_steps": entry["total_steps"]}
+        for entry in data
+    ], safe=False)
+
+
+@login_required
+def monthly_trend_view(request):
+    data = get_monthly_step_totals(request.user)
+    return JsonResponse([
+        {"date": entry["month"], "total_steps": entry["total_steps"]}
+        for entry in data
+    ], safe=False)

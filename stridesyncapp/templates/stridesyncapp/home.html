@@ -19,133 +19,114 @@
             <h2>Current Streak</h2>
             <p style="font-size: 2em; margin: 0;">{{ streak|default:"0" }}</p>
         </div>
-            <div style="padding: 20px; border: 2px solid #dc5926; border-radius: 10px; text-align: center;">
+        <div style="padding: 20px; border: 2px solid #dc5926; border-radius: 10px; text-align: center;">
             <h2>Current Points</h2>
             <p style="font-size: 2em; margin: 0;">{{ user_points|default:"0" }}</p>
         </div>
     </div>
 
-    <!-- Progress Bar Toward Today’s Goal -->
     <h2 style="display:flex; justify-content:space-between; align-items:center;">
-    Goal Progress
-    <a href="{% url 'edit_step_goal' %}" class="btn btn-update" style="font-size:0.9em; padding:0.4em 1em;">
-        Edit Goal
-    </a>
+        Goal Progress
+        <a href="{% url 'edit_step_goal' %}" class="btn btn-update" style="font-size:0.9em; padding:0.4em 1em;">
+            Edit Goal
+        </a>
     </h2>
-    <canvas id="goalBarChart" width="400" height="80"></canvas>
+    <canvas id="goalBarChart" width="600" height="90"></canvas>
 
-    <!-- Weekly Bar Chart -->
     <h2>Last 7 Days</h2>
-    <canvas id="weeklyChart" width="400" height="200"></canvas>
+    <canvas id="weeklyChart" width="800" height="260"></canvas>
 
-    <!-- Monthly Line Chart -->
     <h2>Last 30 Days</h2>
-    <canvas id="monthlyChart" width="400" height="200"></canvas>
+    <canvas id="monthlyChart" width="800" height="260"></canvas>
+
+    <hr style="margin: 32px 0; border: none; border-top: 1px solid #eee;">
+    <h2 style="margin-bottom:8px;">Weekly Trend (by week)</h2>
+    <p style="margin-top:0;color:#666;font-size:0.95em;">Totals grouped by week from your step history.</p>
+    <canvas id="weeklyTrendChart" width="800" height="260"></canvas>
+
+    <h2 style="margin-top:28px; margin-bottom:8px;">Monthly Trend (by month)</h2>
+    <p style="margin-top:0;color:#666;font-size:0.95em;">Totals grouped by calendar month.</p>
+    <canvas id="monthlyTrendAggChart" width="800" height="260"></canvas>
 
     <div>
         {% if not request.user.fitbittoken %}
-        <a href="{% url 'fitbit_connect' %}" class="btn btn-edit">CONNECT FITBIT</a>
+            <a href="{% url 'fitbit_connect' %}" class="btn btn-edit">CONNECT FITBIT</a>
         {% else %}
-        <h2>Fitbit Connected</h2>
+            <h2>Fitbit Connected</h2>
         {% endif %}
     </div>
 
     {% if awarded_badges %}
     <div id="badgeModal" style="position: fixed; z-index: 1000; left: 0; top: 0; width: 100vw; height: 100vh; background:rgba(0,0,0,0.55); display:flex; justify-content:center; align-items:center;">
         <div style="background:white; padding:2em 2.5em; border-radius:18px; box-shadow: 0 0 20px #2a942e44; max-width:370px;">
-        <h2 style="text-align:center;">🎉 Achievement Unlocked!</h2>
-        <ul style="list-style:none;padding:0;">
-            {% for badge in awarded_badges %}
-            <li style="margin-bottom:14px;text-align:center;">
-                <img src="https://cdn4.iconfinder.com/data/icons/game-ui-set-3/96/Medal_gold-512.png" alt="Badge" style="height:48px;margin-right:10px;vertical-align:middle;"> 
-                <strong>{{ badge.name }}</strong><br>
-                <span style="font-size:0.95em;">{{ badge.description }}</span>
-            </li>
-            {% endfor %}
-        </ul>
-        <div style="text-align:center;">
-            <button onclick="document.getElementById('badgeModal').style.display='none'" style="padding:0.4em 1.6em; border:none; background:#2a942e; color:white; border-radius:9px; font-size:1em; cursor:pointer;">Close</button>
-        </div>
+            <h2 style="text-align:center;">🎉 Achievement Unlocked!</h2>
+            <ul style="list-style:none;padding:0;">
+                {% for badge in awarded_badges %}
+                <li style="margin-bottom:14px;text-align:center;">
+                    <img src="https://cdn4.iconfinder.com/data/icons/game-ui-set-3/96/Medal_gold-512.png" alt="Badge" style="height:48px;margin-right:10px;vertical-align:middle;">
+                    <strong>{{ badge.name }}</strong><br>
+                    <span style="font-size:0.95em;">{{ badge.description }}</span>
+                </li>
+                {% endfor %}
+            </ul>
+            <div style="text-align:center;">
+                <button onclick="document.getElementById('badgeModal').style.display='none'" style="padding:0.4em 1.6em; border:none; background:#2a942e; color:white; border-radius:9px; font-size:1em; cursor:pointer;">Close</button>
+            </div>
         </div>
     </div>
     {% endif %}
 
-    <!-- Chart.js init script -->
     <script>
         const percent = {{ percent_goal|default:0 }};
-        const goalCtx = document
-            .getElementById('goalBarChart')
-            .getContext('2d');
-
+        const goalCtx = document.getElementById('goalBarChart').getContext('2d');
         new Chart(goalCtx, {
             type: 'bar',
-            data: {
-                labels: ['Today'],
-                datasets: [{
-                    data: [percent],
-                    backgroundColor: '#28a745',
-                    borderRadius: 10,
-                    barThickness: 40
-                }]
-            },
+            data: { labels: ['Today'], datasets: [{ data: [percent], backgroundColor: '#28a745', borderRadius: 10, barThickness: 40 }] },
             options: {
                 indexAxis: 'y',
-                scales: {
-                    x: {
-                    beginAtZero: true,
-                    max: 100,
-                    display: true
-                    },
-                    y: { display: false }
-                },
-                plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                        callbacks: {
-                            label: ctx => `${ctx.raw}% of goal`
-                        }
-                    }
-                }
+                scales: { x: { beginAtZero: true, max: 100, display: true }, y: { display: false } },
+                plugins: { legend: { display: false }, tooltip: { callbacks: { label: ctx => `${ctx.raw}% of goal` } } }
             }
         });
 
-        // Parse JSON-encoded data into JS arrays
         const labelsWeekly  = JSON.parse('{{ labels_weekly|escapejs }}');
         const dataWeekly    = JSON.parse('{{ data_weekly  |escapejs }}');
         const labelsMonthly = JSON.parse('{{ labels_monthly|escapejs }}');
         const dataMonthly   = JSON.parse('{{ data_monthly  |escapejs }}');
 
-        // 1) Bar chart for 7-day steps
         const weeklyCtx = document.getElementById('weeklyChart').getContext('2d');
         new Chart(weeklyCtx, {
-        type: 'bar',
-        data: {
-            labels: labelsWeekly,
-            datasets: [{
-                label: 'Steps',
-                data: dataWeekly,
-                backgroundColor: 'rgba(54, 162, 235, 0.5)',
-                hoverBackgroundColor: 'rgba(54,162,235,0.8)'
-
-            }]
-        },
-        options: { scales: { y: { beginAtZero: true } } }
+            type: 'bar',
+            data: { labels: labelsWeekly, datasets: [{ label: 'Steps', data: dataWeekly, backgroundColor: 'rgba(54, 162, 235, 0.5)', hoverBackgroundColor: 'rgba(54,162,235,0.8)' }] },
+            options: { scales: { y: { beginAtZero: true } } }
         });
 
         const monthlyCtx = document.getElementById('monthlyChart').getContext('2d');
         new Chart(monthlyCtx, {
-        type: 'line',
-        data: {
-            labels: labelsMonthly,
-            datasets: [{
-                label: 'Steps',
-                data: dataMonthly,
-                borderColor: 'rgba(75, 192, 192, 1)',
-                fill: false,
-            }]
-        },
-        options: { scales: { y: { beginAtZero: true } } }
+            type: 'line',
+            data: { labels: labelsMonthly, datasets: [{ label: 'Steps', data: dataMonthly, borderColor: 'rgba(75, 192, 192, 1)', fill: false }] },
+            options: { scales: { y: { beginAtZero: true } } }
         });
-    </script>
 
+        async function fetchAndRenderTrend(url, canvasId, seriesLabel) {
+            const res = await fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest' }});
+            const data = await res.json();
+
+            const labels = data.map(item => {
+                const d = new Date(item.date);
+                return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+            });
+            const steps = data.map(item => item.total_steps);
+
+            const ctx = document.getElementById(canvasId).getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: { labels, datasets: [{ label: seriesLabel, data: steps, borderColor: 'rgba(99, 102, 241, 1)', backgroundColor: 'rgba(99, 102, 241, 0.15)', fill: true, tension: 0.3 }] },
+                options: { scales: { y: { beginAtZero: true } } }
+            });
+        }
+
+        fetchAndRenderTrend('/api/trends/weekly/',  'weeklyTrendChart',     'Weekly Total Steps');
+        fetchAndRenderTrend('/api/trends/monthly/', 'monthlyTrendAggChart', 'Monthly Total Steps');
+    </script>
 {% endblock %}

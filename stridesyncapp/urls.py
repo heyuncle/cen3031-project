@@ -32,4 +32,8 @@ urlpatterns = [
     path('groups/<int:pk>/leave/', views.group_leave, name='group_leave'),
 
     path('settings/step-goal/', views.edit_step_goal, name='edit_step_goal'),
+
+    path('api/trends/weekly/', views.weekly_trend_view, name='weekly_trend'),
+    path('api/trends/monthly/', views.monthly_trend_view, name='monthly_trend'),
+
 ]

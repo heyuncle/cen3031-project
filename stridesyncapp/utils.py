@@ -6,8 +6,8 @@ from datetime import datetime, timedelta
 from django.utils import timezone
 from django.conf import settings
 from urllib.error import HTTPError
-from django.db.models import F, Value
-from django.db.models.functions import Coalesce
+from django.db.models import F, Value, Sum
+from django.db.models.functions import Coalesce, TruncWeek, TruncMonth
 
 from .models import FitbitToken, StepRecord, User
 
@@ -132,3 +132,35 @@ def get_group_leaderboard(group_id, limit=10):
         .order_by('-points_val', '-streak_val', 'username')[:limit]
     )
     return _dense_rank_users(qs)
+
+
+# Trend analysis functions (Task 16)
+
+def get_weekly_step_totals(user):
+    """
+    Returns a list of weekly step totals for the given user.
+    Format: [{'week': date, 'total_steps': int}]
+    """
+    return (
+        StepRecord.objects
+        .filter(user=user)
+        .annotate(week=TruncWeek('timestamp'))
+        .values('week')
+        .annotate(total_steps=Sum('step_count'))
+        .order_by('week')
+    )
+
+
+def get_monthly_step_totals(user):
+    """
+    Returns a list of monthly step totals for the given user.
+    Format: [{'month': date, 'total_steps': int}]
+    """
+    return (
+        StepRecord.objects
+        .filter(user=user)
+        .annotate(month=TruncMonth('timestamp'))
+        .values('month')
+        .annotate(total_steps=Sum('step_count'))
+        .order_by('month')
+    )

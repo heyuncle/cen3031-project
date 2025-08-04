@@ -16,8 +16,12 @@ urlpatterns = [
     path('fitbit/callback/', views.fitbit_callback, name='fitbit_callback'),
     path('steps/', views.steps, name='steps'),
 
-    path('profile/', views.profile, name='profile'),  # User profile
-    path('leaderboards/', views.leaderboards, name='leaderboards'),  # Leaderboards
+    path('profile/', views.profile, name='profile'),
+    path('leaderboards/', views.leaderboards, name='leaderboards'),
+
+    # --- Leaderboard API (Task 13) ---
+    path('api/leaderboard/global/', views.api_leaderboard_global, name='api_leaderboard_global'),
+    path('api/leaderboard/group/<int:pk>/', views.api_leaderboard_group, name='api_leaderboard_group'),
 
     path('groups/', views.GroupListView.as_view(), name='group_list'),
     path('groups/create/', views.GroupCreateView.as_view(), name='group_create'),

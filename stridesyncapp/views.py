@@ -1,6 +1,6 @@
 from .forms import SignUpForm, ManualStepEntryForm, GroupForm, StepGoalForm
 from .models import StepRecord, FitbitToken, Group, GroupMembership, Badge, Streak, Points
-from .utils import get_fitbit_steps
+from .utils import get_fitbit_steps, get_global_leaderboard, get_group_leaderboard
 from .badge_utils import check_and_award_badges
 from .streak_points import update_streak, update_points
 from datetime import date, timedelta
@@ -13,8 +13,8 @@ from django.db.models import Sum, Max
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse_lazy
 from django.views.generic import CreateView, ListView, DetailView, UpdateView, DeleteView
-from django.shortcuts import redirect, render
 from django.utils import timezone
+from django.http import JsonResponse, Http404
 from urllib.error import HTTPError
 import urllib.parse
 import urllib.request
@@ -25,23 +25,22 @@ import json, base64
 class SignUp(CreateView):
     form_class = SignUpForm
     template_name = "registration/signup.html"
-    success_url = reverse_lazy('login')  # Redirect to login page after successful signup
+    success_url = reverse_lazy('login')
 
 
 def logout_view(request):
     logout(request)
-    return redirect('login')  # Redirect to login page after logout
+    return redirect('login')
+
 
 @login_required
 def home(request):
-    # awarded_badges will be a list of dicts, or None
     awarded_badges = request.session.pop('awarded_badges', None)
 
     streak, created = Streak.objects.get_or_create(user=request.user)
     update_streak(request.user)
     update_points(request.user)
     
-    # Today’s & this week’s raw totals
     steps_today = request.user.steps \
         .filter(timestamp__date=date.today()) \
         .aggregate(Sum('step_count'))['step_count__sum'] or 0
@@ -50,7 +49,6 @@ def home(request):
         .filter(timestamp__date__gte=date.today() - timedelta(days=6)) \
         .aggregate(Sum('step_count'))['step_count__sum'] or 0
 
-    # 7-day bar chart data
     start_week = date.today() - timedelta(days=6)
     weekly_qs = (
         request.user.steps
@@ -70,7 +68,6 @@ def home(request):
     labels_weekly = [d.strftime('%b %d') for d in week_days]
     data_weekly   = [weekly_data_map.get(d, 0) for d in week_days]
 
-    # 30-day line chart data
     start_month = date.today() - timedelta(days=29)
     monthly_qs = (
         request.user.steps
@@ -86,17 +83,13 @@ def home(request):
     labels_monthly = [d.strftime('%b %d') for d in month_days]
     data_monthly   = [monthly_data_map.get(d, 0) for d in month_days]
 
-    # Progress toward today’s goal
     percent_goal = int((steps_today / request.user.step_goal) * 100)
 
     context = {
-        # your existing context...
         "steps_today": steps_today,
         "steps_weekly": steps_weekly,
         'streak': request.user.streak.current_streak,
         "user_points": request.user.points.current_points if hasattr(request.user, 'points') else 0,
-
-        # new chart & progress data, JSON-encoded for template
         "labels_weekly": json.dumps(labels_weekly),
         "data_weekly": json.dumps(data_weekly),
         "labels_monthly": json.dumps(labels_monthly),
@@ -104,6 +97,7 @@ def home(request):
         "percent_goal": percent_goal,
     }
     return render(request, "stridesyncapp/home.html", context)
+
 
 @login_required
 def fitbit_connect(request):
@@ -115,6 +109,7 @@ def fitbit_connect(request):
     }
     url = 'https://www.fitbit.com/oauth2/authorize?' + urllib.parse.urlencode(params)
     return redirect(url)
+
 
 @login_required
 def fitbit_callback(request):
@@ -147,7 +142,6 @@ def fitbit_callback(request):
     except HTTPError as e:
         err = e.read().decode()
         print(f"Fitbit callback failed ({e.code}): {err}")
-        # Optionally set a Django message here, then redirect
         return redirect('home')
 
     FitbitToken.objects.update_or_create(
@@ -161,6 +155,7 @@ def fitbit_callback(request):
 
     return redirect('home')
 
+
 @login_required
 def steps(request):
     try:
@@ -172,16 +167,16 @@ def steps(request):
              .annotate(step_count=Sum('step_count'),
                        is_auto_synced=Max('is_auto_synced')).order_by('-day'))
 
-    # Can remove once user creation automatically creates streak and points
     if not hasattr(request.user, 'streak'):
-                Streak.objects.create(user = request.user, last_logged_date=date.today())
+        Streak.objects.create(user=request.user, last_logged_date=date.today())
     if not hasattr(request.user, 'points'):
-                Points.objects.create(user = request.user)
-    # Recalculate streak and points
+        Points.objects.create(user=request.user)
+
     update_streak(request.user)
     update_points(request.user)
 
     return render(request, 'stridesyncapp/steps.html', {'steps': steps})
+
 
 @login_required
 def manual_step_entry(request):
@@ -195,21 +190,19 @@ def manual_step_entry(request):
             step_record.is_auto_synced = False
             step_record.save()
 
-            # Can remove once user creation automatically creates streak and points
             if not hasattr(request.user, 'streak'):
-                        Streak.objects.create(user = request.user, last_logged_date=date.today())
+                Streak.objects.create(user=request.user, last_logged_date=date.today())
             if not hasattr(request.user, 'points'):
-                        Points.objects.create(user = request.user)
-            # Recalculate streak and points
+                Points.objects.create(user=request.user)
+
             update_streak(request.user)
             update_points(request.user)
 
-            # Check and award badges after manual step entry
             badges = check_and_award_badges(
                 user=request.user,
                 trigger_type="steps",
                 value=step_record.step_count,
-                request=request  # so session gets set
+                request=request
             )
 
             return redirect('home')
@@ -217,6 +210,7 @@ def manual_step_entry(request):
         form = ManualStepEntryForm()
 
     return render(request, "stridesyncapp/manual_step_entry.html", {"form": form, 'manual_steps': manual_steps})
+
 
 @login_required
 def manual_step_edit(request, pk):
@@ -236,7 +230,8 @@ def manual_step_edit(request, pk):
     return render(request, "stridesyncapp/manual_step_edit.html", {
         "form": form,
         'manual_steps': StepRecord.objects.filter(user=request.user, is_auto_synced=False).order_by('-timestamp'),
-        })
+    })
+
 
 @login_required
 def manual_step_delete(request, pk):
@@ -253,18 +248,62 @@ def manual_step_delete(request, pk):
         'step_record': step_record,
     })
 
+
 @login_required
 def profile(request):
     return render(request, "stridesyncapp/profile.html")
 
+
 @login_required
 def leaderboards(request):
-    return render(request, "stridesyncapp/leaderboards.html")
+    from .utils import get_global_leaderboard, get_group_leaderboard
+
+    global_top = get_global_leaderboard(limit=10)
+
+    first_membership = request.user.group_memberships.select_related('group').first()
+    group_top = []
+    group_name = None
+
+    if first_membership:
+        group_name = first_membership.group.name
+        group_top = get_group_leaderboard(first_membership.group.id)
+
+    return render(request, "stridesyncapp/leaderboards.html", {
+        "global_top": global_top,
+        "group_top": group_top,
+        "group_name": group_name,
+    })
+
+
+# Leaderboard API views (Task 13)
+
+@login_required
+def api_leaderboard_global(request):
+    try:
+        limit = int(request.GET.get('limit', 10))
+    except ValueError:
+        limit = 10
+    data = get_global_leaderboard(limit=limit)
+    return JsonResponse({"leaderboard": data})
+
+
+@login_required
+def api_leaderboard_group(request, pk):
+    if not Group.objects.filter(pk=pk).exists():
+        raise Http404("Group not found")
+    try:
+        limit = int(request.GET.get('limit', 10))
+    except ValueError:
+        limit = 10
+    data = get_group_leaderboard(group_id=pk, limit=limit)
+    return JsonResponse({"group_id": pk, "leaderboard": data})
+
 
 class GroupListView(LoginRequiredMixin, ListView):
     model = Group
     template_name = 'stridesyncapp/group_list.html'
     context_object_name = 'groups'
+
 
 class GroupCreateView(LoginRequiredMixin, CreateView):
     model = Group
@@ -276,6 +315,7 @@ class GroupCreateView(LoginRequiredMixin, CreateView):
         form.instance.created_by = self.request.user
         return super().form_valid(form)
     
+
 class GroupDetailView(LoginRequiredMixin, DetailView):
     model = Group
     template_name = 'stridesyncapp/group_detail.html'
@@ -287,6 +327,7 @@ class GroupDetailView(LoginRequiredMixin, DetailView):
         context['is_member'] = group.members.filter(user=self.request.user).exists()
         return context
 
+
 class GroupUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Group
     form_class = GroupForm
@@ -297,6 +338,7 @@ class GroupUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         group = self.get_object()
         return group.created_by == self.request.user or self.request.user.is_admin
 
+
 class GroupDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     model = Group
     template_name = 'stridesyncapp/group_confirm_delete.html'
@@ -306,25 +348,23 @@ class GroupDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         group = self.get_object()
         return group.created_by == self.request.user or self.request.user.is_admin
     
+
 @login_required
 def group_join(request, pk):
     group = get_object_or_404(Group, pk=pk)    
     GroupMembership.objects.get_or_create(user=request.user, group=group)
-
     return redirect('group_detail', pk=pk)
+
 
 @login_required
 def group_leave(request, pk):
     group = get_object_or_404(Group, pk=pk)
-    
     GroupMembership.objects.filter(user=request.user, group=group).delete()
     return redirect('group_list')
 
+
 @login_required
 def edit_step_goal(request):
-    """
-    Let the logged-in user update their daily step_goal.
-    """
     if request.method == 'POST':
         form = StepGoalForm(request.POST, instance=request.user)
         if form.is_valid():

@@ -4,6 +4,9 @@
 
 {% block content %}
     <div class="step-history-container">
+        <div style="width: 100%; display: flex; justify-content: flex-end; align-items: center; margin-bottom: 0;">
+            <a href="?view=weekly" style="font-size: 1em; color: #2a942e; text-decoration: underline; margin: 20px 20px 0 0;">Weekly View</a>
+        </div>
         <div class="history-header">
             <h1>Step History</h1>
             <a href="{% url 'manual_step_entry' %}" class="btn btn-add">Add Manual Steps</a>

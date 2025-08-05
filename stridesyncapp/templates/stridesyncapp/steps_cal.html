@@ -1,0 +1,49 @@
+{% extends 'stridesyncapp/base.html' %}
+
+{% block title %}Step History{% endblock %}
+
+{% block content %}
+    <div class="step-history-container">
+        <div style="width: 100%; display: flex; justify-content: flex-end; align-items: center; margin-bottom: 0;">
+            <a href="?view=table" style="font-size: 1em; color: #2a942e; text-decoration: underline; margin: 20px 20px 0 0;">Legacy Table View</a>
+        </div>
+        <div class="history-header" style="display: flex; justify-content: center; align-items: center; margin-bottom: 20px;">
+            <h1 style="margin: 0 auto;">Step History</h1>
+        </div>
+        <div style="display: flex; align-items: stretch; width: 80vw; max-width: 80vw; margin-left: calc(-40vw + 50%);">
+        <a href="?offset={% if offset %}{{ offset|add:7 }}{% else %}7{% endif %}" style="display: flex; align-items: center; justify-content: center; width: 40px; min-width: 40px; height: auto; text-decoration: none;">
+            <svg width="30" height="60" viewBox="0 0 30 60" style="display: block;"><polygon points="25,5 5,30 25,55" fill="#2a942e"/></svg>
+        </a>
+        <div style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; flex-grow: 1; margin: 20px 0; min-width: 0;">
+            <form id="steps-edit-form" method="POST" autocomplete="off" style="display: contents;">
+                {% csrf_token %}
+                {% for record in week_steps %}
+                    <div style="padding: 20px; border: 2px solid #2a942e; border-radius: 10px; text-align: center;">
+                        <h2>{{ record.day|date:"m/d" }}</h2>
+                        <hr style="border: none; border-top: 2px solid #2a942e; margin: 24px 0 120px 0;">
+                        <input type="number" name="step_count_{{ record.day|date:'Y-m-d' }}" value="{{ record.step_count }}" style="font-size: 2em; margin: 0; width: 80px; text-align: center; border: 1px solid #2a942e; border-radius: 5px;" data-day="{{ record.day|date:'Y-m-d' }}">
+                    </div>
+                {% endfor %}
+            </form>
+            <script>
+            document.querySelectorAll('input[type="number"][data-day]').forEach(function(input) {
+                input.addEventListener('change', function() {
+                    var form = document.getElementById('steps-edit-form');
+                    var hidden = document.createElement('input');
+                    hidden.type = 'hidden';
+                    hidden.name = 'edit_day';
+                    hidden.value = input.getAttribute('data-day');
+                    form.appendChild(hidden);
+                    form.action = "{% url 'edit_steps' %}";
+                    form.method = "POST";
+                    form.submit();
+                });
+            });
+            </script>
+        </div>
+        <a href="?offset={% if offset %}{{ offset|add:-7 }}{% else %}-7{% endif %}" style="display: flex; align-items: center; justify-content: center; width: 40px; min-width: 40px; height: auto; text-decoration: none;">
+            <svg width="30" height="60" viewBox="0 0 30 60" style="display: block;"><polygon points="5,5 25,30 5,55" fill="#2a942e"/></svg>
+        </a>
+        </div>
+    </div>
+{% endblock %}

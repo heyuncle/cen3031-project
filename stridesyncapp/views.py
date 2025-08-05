@@ -163,25 +163,40 @@ def fitbit_callback(request):
 
 @login_required
 def steps(request):
+    view = request.GET.get('view', 'weekly')
+
     try:
         get_fitbit_steps(request.user, date.today().isoformat())
     except FitbitToken.DoesNotExist:
         pass
 
     steps = (request.user.steps.annotate(day=TruncDate('timestamp')).values('day')
-             .annotate(step_count=Sum('step_count'),
-                       is_auto_synced=Max('is_auto_synced')).order_by('-day'))
+            .annotate(step_count=Sum('step_count'),
+                    is_auto_synced=Max('is_auto_synced')).order_by('-day'))
 
     if not hasattr(request.user, 'streak'):
-        Streak.objects.create(user=request.user, last_logged_date=date.today())
+        Streak.objects.create(user = request.user, last_logged_date=date.today())
     if not hasattr(request.user, 'points'):
-        Points.objects.create(user=request.user)
-
+        Points.objects.create(user = request.user)
+    # Recalculate streak and points
     update_streak(request.user)
     update_points(request.user)
 
-    return render(request, 'stridesyncapp/steps.html', {'steps': steps})
+    if view == 'table':
+        return render(request, 'stridesyncapp/steps.html', {'steps': steps})
 
+    offset = int(request.GET.get('offset', 0))
+    week_steps = []
+    for i in range(6, -1, -1):
+        day = date.today() - timedelta(days=i + offset)
+        step_count = steps.filter(day=day).aggregate(Sum('step_count'))['step_count__sum'] or 0
+        week_steps.append({
+            'day': day,
+            'step_count': step_count,
+            'is_auto_synced': steps.filter(day=day).aggregate(Max('is_auto_synced'))['is_auto_synced__max']
+        })
+
+    return render(request, 'stridesyncapp/steps_cal.html', {'week_steps': week_steps, 'offset': offset})
 
 @login_required
 def manual_step_entry(request):

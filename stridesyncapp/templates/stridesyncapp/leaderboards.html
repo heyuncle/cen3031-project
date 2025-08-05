@@ -1,5 +1,115 @@
 {% extends "stridesyncapp/base.html" %}
 
 {% block content %}
-    <h1>Leaderboards</h1>
+    <!DOCTYPE html>
+<html>
+<head>
+    <title>StrideSync Leaderboards</title>
+    <style>
+        body {
+            font-family: "Segoe UI", sans-serif;
+            background: #f4f6f8;
+            margin: 0;
+            padding: 2rem;
+        }
+
+        h2 {
+            color: #333;
+            margin-top: 2rem;
+            border-bottom: 2px solid #5a9bd4;
+            padding-bottom: 0.3rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+            background: white;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+            border-radius: 6px;
+            overflow: hidden;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+        }
+
+        th {
+            background-color: #5a9bd4;
+            color: white;
+            font-weight: 600;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        tr:hover {
+            background-color: #f1faff;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h1>🏆 StrideSync Leaderboards</h1>
+
+    <h2>🌍 Global Leaderboard</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Rank</th>
+                <th>Username</th>
+                <th>Points</th>
+                <th>Streak</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for user in global_top %}
+            <tr>
+                <td>{{ user.rank }}</td>
+                <td>{{ user.username }}</td>
+                <td>{{ user.points }}</td>
+                <td>{{ user.streak }}</td>
+            </tr>
+            {% empty %}
+            <tr><td colspan="4">No users found.</td></tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if group_top %}
+        <h2>👥 Group Leaderboard: {{ group_name }}</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Username</th>
+                    <th>Points</th>
+                    <th>Streak</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for user in group_top %}
+                <tr>
+                    <td>{{ user.rank }}</td>
+                    <td>{{ user.username }}</td>
+                    <td>{{ user.points }}</td>
+                    <td>{{ user.streak }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4">No users found in this group.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+</div>
+</body>
+</html>
+
 {% endblock %}

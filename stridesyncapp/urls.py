@@ -17,8 +17,12 @@ urlpatterns = [
     path('fitbit/callback/', views.fitbit_callback, name='fitbit_callback'),
     path('steps/', views.steps, name='steps'),
 
-    path('profile/', views.profile, name='profile'),  # User profile
-    path('leaderboards/', views.leaderboards, name='leaderboards'),  # Leaderboards
+    path('profile/', views.profile, name='profile'),
+    path('leaderboards/', views.leaderboards, name='leaderboards'),
+
+    # --- Leaderboard API (Task 13) ---
+    path('api/leaderboard/global/', views.api_leaderboard_global, name='api_leaderboard_global'),
+    path('api/leaderboard/group/<int:pk>/', views.api_leaderboard_group, name='api_leaderboard_group'),
 
     path('groups/', views.GroupListView.as_view(), name='group_list'),
     path('groups/create/', views.GroupCreateView.as_view(), name='group_create'),
@@ -27,5 +31,12 @@ urlpatterns = [
     path('groups/<int:pk>/delete/', views.GroupDeleteView.as_view(), name='group_delete'),
     path('groups/<int:pk>/join/', views.group_join, name='group_join'),
     path('groups/<int:pk>/leave/', views.group_leave, name='group_leave'),
+
     path('steps/edit/', edit_steps, name='edit_steps'),
+
+    path('settings/step-goal/', views.edit_step_goal, name='edit_step_goal'),
+
+    path('api/trends/weekly/', views.weekly_trend_view, name='weekly_trend'),
+    path('api/trends/monthly/', views.monthly_trend_view, name='monthly_trend'),
+
 ]

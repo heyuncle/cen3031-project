@@ -17,7 +17,11 @@ def update_streak(user):
 
 def update_points(user):
     # This is arbitrary for now, but it's average(steps over past week) + 10 * (streak)
-    week_average = user.steps.filter(timestamp__date__gte=date.today() - timedelta(days=6)).aggregate(Sum('step_count'))['step_count__sum'] // 7
+    week_steps = user.steps.filter(timestamp__date__gte=date.today() - timedelta(days=6)).aggregate(Sum('step_count'))['step_count__sum']
+    if week_steps is None:
+        week_average = 0
+    else:
+        week_average = week_steps // 7
     streak_points = user.streak.current_streak * 10
     user.points.current_points = week_average + streak_points
     user.points.save()

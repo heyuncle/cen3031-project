@@ -1,5 +1,6 @@
 from django.urls import path, include
 from . import views
+from .views_steps_edit import edit_steps
 
 urlpatterns = [
     path('', views.home, name='home'),  # Home page
@@ -26,4 +27,5 @@ urlpatterns = [
     path('groups/<int:pk>/delete/', views.GroupDeleteView.as_view(), name='group_delete'),
     path('groups/<int:pk>/join/', views.group_join, name='group_join'),
     path('groups/<int:pk>/leave/', views.group_leave, name='group_leave'),
+    path('steps/edit/', edit_steps, name='edit_steps'),
 ]
